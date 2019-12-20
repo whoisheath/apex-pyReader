@@ -5,25 +5,35 @@ except ImportError:
 import pytesseract
 import PIL.ImageOps
 import pygsheets
+import argparse
+
+parser = argparse.ArgumentParser(description='something something')
+parser.add_argument('--path', default=1, type=str, required=True, help="path to file")
+
+args = parser.parse_args()
+
+screenshot_path = args.path
 
 gc = pygsheets.authorize(service_file='client_secret.json')
 
 wb = gc.open('Apex Data -- The Bois')
 
-sheet = wb.worksheet_by_title('Game Data')
+sheet = wb[0]
 
-cell_list = sheet.get_values(start='B3', end='B1000', returnas='cells')
+index_to_start = sheet.get_values(start='B3', end='B1000', returnas='cells')
+
+working_range = sheet.get_values(start='A3', end='AB1000', returnas='cells')
 
 games_played = 0
 
-for row in cell_list:
+for row in index_to_start:
     for cell in row:
         if(cell.value != ''):
             games_played += 1
 
-input_row = games_played + 1
+input_row = games_played
 
-print(sheet[34][2]) # can't access cells in a row greater than index of 34, so greater than row 33 lol what
+# print(sheet[35][2]) # can't access cells in a row greater than index of 34, so greater than row 33 lol what
 
 #-----------------------#
 #                       #
@@ -33,7 +43,7 @@ print(sheet[34][2]) # can't access cells in a row greater than index of 34, so g
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
 
-image = Image.open(r'images\\game_with_devon.png')
+image = Image.open(screenshot_path)
 
 width, height = image.size
 
@@ -73,21 +83,25 @@ devon_data = {}
 def get_heath_stats():
     if(heath != -1):
         # kills
-        sheet[input_row][21] = int(heath_stats[15:18])
+        working_range[input_row][19].value = int(heath_stats[15:18])
+        heath_data['Kills'] = int(heath_stats[15:18])
 
         # damage
-        sheet[input_row][20] = int(heath_stats[32:38])
-        # sheet[input_row][20] = int(heath_stats[15:18])
-        # heath_data['Kills'] = int(heath_stats[15:18])
-        # heath_data['Damage'] = int(heath_stats[32:38])
-        # data['Heath'] = heath_data
+        working_range[input_row][18].value = int(heath_stats[32:38])
+        heath_data['Damage'] = int(heath_stats[32:38])
+
+        data['Heath'] = heath_data
     else:
         print("heath's data not found... :(")
 
 def get_devon_stats():
     if(devon != -1):
-        # print(devon_stats)
+        # kills
+        working_range[input_row][9].value = int(devon_stats[17:20])
         devon_data['Kills'] = int(devon_stats[17:20])
+
+        # damage
+        working_range[input_row][8].value = int(devon_stats[34:39])
         devon_data['Damage'] = int(devon_stats[34:39])
         data['Devon'] = devon_data
     else:
@@ -95,16 +109,23 @@ def get_devon_stats():
 
 def get_cam_stats():
     if(cam != -1):
+        # kills
+        working_range[input_row][14].value = int(cam_stats[15:18])
         cam_data['Kills'] = int(cam_stats[15:18])
+
+        # damage
+        working_range[input_row][13].value = int(cam_stats[32:38])
         cam_data['Damage'] = int(cam_stats[32:38])
+
         data['Cameron'] = cam_data
     else:
         print("cam's data not found... :(")
 
 def get_the_bois_stats():
+    working_range[input_row][0].value = input_row + 1
     get_heath_stats()
     get_devon_stats()
     get_cam_stats()
     print(data)
     
-# get_the_bois_stats()
+get_the_bois_stats()
