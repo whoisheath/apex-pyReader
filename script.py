@@ -5,14 +5,7 @@ except ImportError:
 import pytesseract
 import PIL.ImageOps
 import pygsheets
-import argparse
-
-parser = argparse.ArgumentParser(description='something something')
-parser.add_argument('--path', default=1, type=str, required=True, help="path to file")
-
-args = parser.parse_args()
-
-screenshot_path = args.path
+from datetime import datetime
 
 gc = pygsheets.authorize(service_file='client_secret.json')
 
@@ -33,7 +26,36 @@ for row in index_to_start:
 
 input_row = games_played
 
-# print(sheet[35][2]) # can't access cells in a row greater than index of 34, so greater than row 33 lol what
+# start game
+working_range[input_row][0].value = input_row + 1
+
+now = datetime.now()
+
+working_range[input_row][1].value = now.strftime("%m/%d/%Y %H:%M:%S")
+
+
+# game end
+game_end = input("did the game end? \n")
+now1 = datetime.now()
+working_range[input_row][2].value = now1.strftime("%m/%d/%Y %H:%M:%S")
+landed = input('third partied? y or n \n')
+
+if(landed == 'y'):
+    working_range[input_row][6].value = "Yes"
+elif(landed == 'n'):
+    working_range[input_row][6].value = "No"
+
+game_mode = input("game mode? c or r \n")
+
+if(game_mode == 'r'):
+    working_range[input_row][7].value = "Ranked"
+elif(game_mode == 'c'):
+    working_range[input_row][7].value = "Casual"
+
+screenshot_path = input('path to screenshot \n')
+print(screenshot_path[1:-1])
+    
+
 
 #-----------------------#
 #                       #
@@ -43,7 +65,7 @@ input_row = games_played
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract'
 
-image = Image.open(screenshot_path)
+image = Image.open(screenshot_path[1:-1])
 
 width, height = image.size
 
@@ -122,7 +144,6 @@ def get_cam_stats():
         print("cam's data not found... :(")
 
 def get_the_bois_stats():
-    working_range[input_row][0].value = input_row + 1
     get_heath_stats()
     get_devon_stats()
     get_cam_stats()
